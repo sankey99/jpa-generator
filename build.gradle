@@ -1,0 +1,64 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven{
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath 'gradle.plugin.org.hibernate.gradle.tools:hibernatetools-gradle-plugin:1.2.5'
+    }
+}
+apply plugin: "hibernatetools-gradle-plugin"
+apply plugin: "java"
+
+dependencies{
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+    compile 'org.hibernate:hibernate-entitymanager:5.2.10.Final'
+    compile 'org.hibernate:hibernate-core:5.2.10.Final'
+    compile 'org.postgresql:postgresql:9.4.1212'
+    compile 'org.apache.commons:commons-dbcp2:2.0'
+}
+
+
+task packageJavadoc(type: Jar, dependsOn: 'javadoc') {
+    from javadoc.destinationDir
+    classifier = 'javadoc'
+}
+
+task packageSources(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+artifacts {
+    archives jar
+    archives packageJavadoc
+    archives packageSources
+}
+
+jar {
+    manifest.attributes provider: 'cs'
+    baseName = 'jpa-generator'
+    version = '0.1.0-SNAPSHOT'
+}
+
+// >>>> Important <<<<
+import org.hibernate.gradle.tools.*
+
+database {
+    catalog         = [".*":new Schema(".*", ".*")]
+    basePackage ="com.cs.common.persistence"
+    catalog = [ "test": new Schema()]
+    url     = "jdbc:postgresql://localhost"
+    //url gets generated in format host:port
+    //override url in build/generated/resources/hibernate.cfg.xml to match host:port/database
+    port    =5432
+    driver  ="org.postgresql.Driver"
+    dialect ="org.hibernate.dialect.PostgreSQLDialect"
+
+}
